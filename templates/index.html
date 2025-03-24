@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>tris.tw 短網址</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen px-4 py-6">
+  <div class="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-xl">
+    <div class="flex justify-end items-center gap-4 mb-6">
+      <span class="text-gray-700 font-medium">
+        歡迎回來，{{ user.username }}
+      </span>
+      <form method="get" action="/logout">
+        <button type="submit" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">
+          登出
+        </button>
+      </form>
+    </div>
+    <h1 class="text-3xl font-bold mb-6 text-center text-indigo-600">tris.tw 短網址服務</h1>
+    
+    <!-- 建立短網址表單 -->
+    <form id="shortenForm" class="space-y-4 mb-12" enctype="multipart/form-data">
+      <div>
+        <label class="block text-gray-700 font-semibold mb-1">輸入網址</label>
+        <input type="text" name="original_url" class="w-full border border-gray-300 p-2 rounded"
+               placeholder="https://example.com">
+      </div>
+      <div>
+        <label class="block text-gray-700 font-semibold mb-1">或上傳檔案</label>
+        <input type="file" name="file" class="w-full">
+      </div>
+      <div>
+        <label class="block text-gray-700 font-semibold mb-1">幾天後過期（預設 30）</label>
+        <div class="flex items-center gap-2">
+          <input type="number" name="expires_in_days" id="expiresInput" value="30" min="0"
+                 class="w-32 border border-gray-300 p-2 rounded">
+          <button type="button" onclick="setNeverExpire()"
+                  class="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">永不</button>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">建立</button>
+        <progress id="uploadProgress" value="0" max="100" class="w-full h-4 hidden"></progress>
+      </div>
+    </form>
+
+    <hr class="my-8">
+
+    <!-- 每頁筆數選擇 -->
+    <form method="get" action="/" class="mb-6 flex items-center gap-4">
+      <label class="text-sm font-medium text-gray-700">每頁顯示筆數：</label>
+      <input type="number" name="page_size" value="{{ page_size }}" min="1"
+             class="w-20 border border-gray-300 p-1 rounded">
+      <input type="hidden" name="page_active" value="1">
+      <input type="hidden" name="page_expired" value="1">
+      <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 text-sm">
+        套用
+      </button>
+    </form>
+
+    <!-- 活動中的短網址清單 -->
+    <h2 class="text-xl font-semibold mb-2 text-green-600 flex items-center gap-2">
+        <span class="h-4 w-4 rounded-full bg-green-600 animate-pulse"></span>
+        啟用中
+      </h2>
+    {% include "_url_table.html" with context %}
+    <div class="flex justify-center gap-4 items-center mt-4">
+      <button {% if page_active <= 1 %}disabled{% endif %}
+              onclick="location.href='/?page_active={{ page_active - 1 }}&page_expired={{ page_expired }}&page_size={{ page_size }}'"
+              class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        上一頁
+      </button>
+      <button {% if not has_next_active %}disabled{% endif %}
+              onclick="location.href='/?page_active={{ page_active + 1 }}&page_expired={{ page_expired }}&page_size={{ page_size }}'"
+              class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        下一頁
+      </button>
+    </div>
+
+    <!-- 過期的短網址清單 -->
+    <h2 class="text-xl font-semibold mb-2 text-red-600 flex items-center gap-2">
+        <span class="h-4 w-4 rounded-full bg-red-600 animate-none"></span>
+        已過期
+    </h2>
+    {% include "_url_table_expired.html" with context %}
+    <div class="flex justify-center gap-4 items-center mt-4">
+      <button {% if page_expired <= 1 %}disabled{% endif %}
+              onclick="location.href='/?page_active={{ page_active }}&page_expired={{ page_expired - 1 }}&page_size={{ page_size }}'"
+              class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        上一頁
+      </button>
+      <button {% if not has_next_expired %}disabled{% endif %}
+              onclick="location.href='/?page_active={{ page_active }}&page_expired={{ page_expired + 1 }}&page_size={{ page_size }}'"
+              class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+        下一頁
+      </button>
+    </div>
+    <!-- 一鍵刪除過期資料 -->
+    <form action="/delete_expired" method="post"
+          onsubmit="return confirm('確定要刪除所有過期資料嗎？')"
+          class="flex justify-end">
+      <button type="submit"
+              class="mb-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+        一鍵刪除所有過期資料
+      </button>
+    </form>
+  </div>
+
+  <!-- JS: 上傳進度條、欄位驗證、預覽按鈕判斷 -->
+  <script>
+    function setNeverExpire() {
+      document.getElementById("expiresInput").value = 0;
+    }
+
+    const form = document.getElementById("shortenForm");
+    const progress = document.getElementById("uploadProgress");
+
+    form.addEventListener("submit", function (e) {
+      const url = form.querySelector('input[name="original_url"]').value.trim();
+      const file = form.querySelector('input[name="file"]').files[0];
+
+      if (!url && !file) {
+        alert("請輸入網址或選擇檔案");
+        e.preventDefault();
+        return;
+      }
+
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const xhr = new XMLHttpRequest();
+
+      xhr.open("POST", "/shorten", true);
+
+      xhr.upload.addEventListener("loadstart", function () {
+        progress.classList.remove("hidden");
+        progress.value = 0;
+      });
+
+      xhr.upload.addEventListener("progress", function (event) {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          progress.value = percent;
+        }
+      });
+
+      xhr.addEventListener("load", function () {
+        location.reload();
+      });
+
+      xhr.send(formData);
+    });
+
+    const previewableExts = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "pdf"];
+    document.querySelectorAll(".preview-link").forEach(el => {
+      const ext = el.dataset.ext;
+      if (!previewableExts.includes(ext)) {
+        el.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<table class="min-w-full bg-white border border-gray-300 text-sm text-gray-700">
+    <thead>
+      <tr class="bg-gray-200">
+        <th class="py-2 px-4 border">原始資料</th>
+        <th class="py-2 px-4 border">短網址</th>
+        <th class="py-2 px-4 border">建立時間</th>
+        <th class="py-2 px-4 border">過期時間</th>
+        <th class="py-2 px-4 border">建立者</th>
+        <th class="py-2 px-4 border">操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in active_urls %}
+      <tr class="hover:bg-gray-50">
+        <td class="py-2 px-4 border max-w-xs truncate" title="{% if item.original_url %}{{ item.original_url }}{% elif item.file_name %}{{ item.file_name }}{% endif %}">
+          {% if item.original_url %}{{ item.original_url }}
+          {% elif item.file_name %}{{ item.file_name }}
+          {% endif %}
+        </td>
+        <td class="py-2 px-4 border">
+            <div class="flex items-center gap-2">
+                <a href="/{{ item.short_code }}" target="_blank" class="text-indigo-600 hover:underline">
+                  tris.tw/{{ item.short_code }}
+                </a>
+                {% if item.file_path %}
+                  {% set ext = item.file_name.split('.')[-1].lower() %}
+                  <a href="/{{ item.short_code }}?view" class="text-sm text-gray-500 hover:underline preview-link" data-ext="{{ ext }}">
+                    預覽
+                  </a>
+                {% endif %}
+              </div>
+        </td>
+        <td class="text-center py-2 px-4 border">{{ item.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+        <td class="text-center py-2 px-4 border">{% if item.expires_at %}{{ item.expires_at.strftime("%Y-%m-%d") }}{% else %}永不過期{% endif %}</td>
+        <td class="text-center py-2 px-4 border">{{ item.created_by }}</td>
+        <td class="text-center py-2 px-4 border">
+          <form action="/delete/{{ item.id }}" method="post" onsubmit="return confirm('確定要刪除這筆資料嗎？')">
+            <button type="submit" class="text-red-600 hover:underline">刪除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
