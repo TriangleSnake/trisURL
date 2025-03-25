@@ -159,6 +159,22 @@
         el.style.display = "none";
       }
     });
+    function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      const toast = document.getElementById("toast");
+      toast.classList.remove("hidden");
+      toast.classList.add("opacity-100");
+
+      setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 2000);
+    }).catch(err => {
+      console.error("複製失敗", err);
+    });
+  }
   </script>
+  <div id="toast" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg hidden z-50 transition-opacity duration-300">
+    短網址已複製！
+  </div>
 </body>
 </html>

@@ -6,3 +6,5 @@ python-multipart
 jinja2
 authlib
 python-dotenv
+itsdangerous
+httpx
