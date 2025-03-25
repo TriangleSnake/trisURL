@@ -155,14 +155,6 @@
       xhr.send(formData);
     });
 
-    const previewableExts = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "pdf"];
-    document.querySelectorAll(".preview-link").forEach(el => {
-      const ext = el.dataset.ext;
-      if (!previewableExts.includes(ext)) {
-        el.style.display = "none";
-      }
-    });
-
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
         const toast = document.getElementById("toast");

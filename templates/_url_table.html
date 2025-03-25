@@ -19,20 +19,34 @@
           {% endif %}
         </td>
         <td class="py-2 px-4 border">
-            <div class="flex items-center gap-2">
-                <a href="/{{ item.short_code }}" target="_blank" class="text-indigo-600 hover:underline">
-                  {{domain}}/{{ item.short_code }}
-                </a>
-                {% if item.file_path %}
-                  {% set ext = item.file_name.split('.')[-1].lower() %}
-                  <a href="/{{ item.short_code }}?view" class="text-sm text-gray-500 hover:underline preview-link" data-ext="{{ ext }}">
-                    預覽
-                  </a>
-                {% endif %}
-                <button onclick="copyToClipboard('{{ request.url.scheme }}://{{ request.url.hostname }}/{{ item.short_code }}')" class="text-sm text-blue-500 hover:underline">
-                  複製
-                </button>
-              </div>
+          <div class="flex items-center gap-2 justify-between">
+            <a href="/{{ item.short_code }}" target="_blank" class="text-indigo-600 hover:underline">
+              {{ domain }}/{{ item.short_code }}
+            </a>
+        
+            {% set previewable_exts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'pdf'] %}
+            {% set ext = item.file_name.split('.')[-1].lower() if item.file_name else '' %}
+            {% set is_previewable = ext in previewable_exts %}
+        
+            {% if item.file_path and is_previewable %}
+              <!-- ✅ 可預覽 -->
+              <a href="/{{ item.short_code }}?view"
+                 class="text-sm text-gray-500 hover:underline preview-link"
+                 data-ext="{{ ext }}">
+                預覽
+              </a>
+            {% else %}
+              <!-- ❌ 無法預覽（轉址 or 不支援副檔名） -->
+              <span class="text-sm text-gray-400 cursor-not-allowed pointer-events-none select-none">
+                預覽
+              </span>
+            {% endif %}
+        
+            <button onclick="copyToClipboard('{{ request.url.scheme }}://{{ request.url.hostname }}/{{ item.short_code }}')"
+                    class="text-sm text-blue-500 hover:underline whitespace-nowrap">
+              複製
+            </button>
+          </div>
         </td>
         <td class="text-center py-2 px-4 border">{{ item.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
         <td class="text-center py-2 px-4 border">{% if item.expires_at %}{{ item.expires_at.strftime("%Y-%m-%d") }}{% else %}永不過期{% endif %}</td>
