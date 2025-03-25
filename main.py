@@ -61,7 +61,10 @@ def dashboard(
     page_active: int = 1,
     page_expired: int = 1,
     page_size: int = 10
-):
+):  
+    if CONFIG("DEV"):
+        request.session["user"] = get_current_user(request)
+
     if "user" not in request.session:
         return RedirectResponse("/login")
 

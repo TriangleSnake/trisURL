@@ -2,23 +2,26 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{site_name}}</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen px-4 py-6">
   <div class="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-xl">
-    <div class="flex justify-end items-center gap-4 mb-6">
-      <span class="text-gray-700 font-medium">
-        歡迎回來，{{ user.username }}
-      </span>
-      <form method="get" action="/logout">
-        <button type="submit" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">
-          登出
-        </button>
-      </form>
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-indigo-600 text-center sm:text-left">{{site_name}}</h1>
+      <div class="flex items-center gap-4">
+        <span class="text-gray-700 font-medium">
+          歡迎回來，{{ user.username }}
+        </span>
+        <form method="get" action="/logout">
+          <button type="submit" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300">
+            登出
+          </button>
+        </form>
+      </div>
     </div>
-    <h1 class="text-3xl font-bold mb-6 text-center text-indigo-600">{{site_name}}</h1>
-    
+
     <!-- 建立短網址表單 -->
     <form id="shortenForm" class="space-y-4 mb-12" enctype="multipart/form-data">
       <div>
@@ -28,19 +31,19 @@
       </div>
       <div>
         <label class="block text-gray-700 font-semibold mb-1">或上傳檔案</label>
-        <input type="file" name="file" class="w-full">
+        <input type="file" name="file" class="w-full sm:w-60">
       </div>
       <div>
         <label class="block text-gray-700 font-semibold mb-1">幾天後過期（預設 30）</label>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <input type="number" name="expires_in_days" id="expiresInput" value="30" min="0"
-                 class="w-32 border border-gray-300 p-2 rounded">
+                 class="w-full sm:w-32 border border-gray-300 p-2 rounded">
           <button type="button" onclick="setNeverExpire()"
-                  class="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">永不</button>
+                  class="text-sm px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 whitespace-nowrap">永不</button>
         </div>
       </div>
-      <div class="flex items-center gap-4">
-        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">建立</button>
+      <div class="flex flex-col sm:flex-row items-center gap-4">
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded w-full sm:w-auto">建立</button>
         <progress id="uploadProgress" value="0" max="100" class="w-full h-4 hidden"></progress>
       </div>
     </form>
@@ -48,10 +51,10 @@
     <hr class="my-8">
 
     <!-- 每頁筆數選擇 -->
-    <form method="get" action="/" class="mb-6 flex items-center gap-4">
+    <form method="get" action="/" class="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
       <label class="text-sm font-medium text-gray-700">每頁顯示筆數：</label>
       <input type="number" name="page_size" value="{{ page_size }}" min="1"
-             class="w-20 border border-gray-300 p-1 rounded">
+             class="w-full sm:w-20 border border-gray-300 p-1 rounded">
       <input type="hidden" name="page_active" value="1">
       <input type="hidden" name="page_expired" value="1">
       <button type="submit" class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 text-sm">
@@ -63,9 +66,9 @@
     <h2 class="text-xl font-semibold mb-2 text-green-600 flex items-center gap-2">
         <span class="h-4 w-4 rounded-full bg-green-600 animate-pulse"></span>
         啟用中
-      </h2>
+    </h2>
     {% include "_url_table.html" with context %}
-    <div class="flex justify-center gap-4 items-center mt-4">
+    <div class="flex justify-center gap-4 items-center mt-4 flex-wrap">
       <button {% if page_active <= 1 %}disabled{% endif %}
               onclick="location.href='/?page_active={{ page_active - 1 }}&page_expired={{ page_expired }}&page_size={{ page_size }}'"
               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -79,12 +82,12 @@
     </div>
 
     <!-- 過期的短網址清單 -->
-    <h2 class="text-xl font-semibold mb-2 text-red-600 flex items-center gap-2">
+    <h2 class="text-xl font-semibold mb-2 text-red-600 flex items-center gap-2 mt-10">
         <span class="h-4 w-4 rounded-full bg-red-600 animate-none"></span>
         已過期
     </h2>
     {% include "_url_table_expired.html" with context %}
-    <div class="flex justify-center gap-4 items-center mt-4">
+    <div class="flex justify-center gap-4 items-center mt-4 flex-wrap">
       <button {% if page_expired <= 1 %}disabled{% endif %}
               onclick="location.href='/?page_active={{ page_active }}&page_expired={{ page_expired - 1 }}&page_size={{ page_size }}'"
               class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -99,9 +102,9 @@
     <!-- 一鍵刪除過期資料 -->
     <form action="/delete_expired" method="post"
           onsubmit="return confirm('確定要刪除所有過期資料嗎？')"
-          class="flex justify-end">
+          class="flex justify-end mt-6">
       <button type="submit"
-              class="mb-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+              class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
         一鍵刪除所有過期資料
       </button>
     </form>
@@ -159,19 +162,20 @@
         el.style.display = "none";
       }
     });
-    function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      const toast = document.getElementById("toast");
-      toast.classList.remove("hidden");
-      toast.classList.add("opacity-100");
 
-      setTimeout(() => {
-        toast.classList.add("hidden");
-      }, 2000);
-    }).catch(err => {
-      console.error("複製失敗", err);
-    });
-  }
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById("toast");
+        toast.classList.remove("hidden");
+        toast.classList.add("opacity-100");
+
+        setTimeout(() => {
+          toast.classList.add("hidden");
+        }, 2000);
+      }).catch(err => {
+        console.error("複製失敗", err);
+      });
+    }
   </script>
   <div id="toast" class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg hidden z-50 transition-opacity duration-300">
     短網址已複製！

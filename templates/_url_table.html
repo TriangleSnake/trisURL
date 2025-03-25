@@ -1,3 +1,4 @@
+<div class="overflow-x-auto">
 <table class="min-w-full bg-white border border-gray-300 text-sm text-gray-700">
     <thead>
       <tr class="bg-gray-200">
@@ -12,7 +13,7 @@
     <tbody>
       {% for item in active_urls %}
       <tr class="hover:bg-gray-50">
-        <td class="py-2 px-4 border max-w-xs truncate" title="{% if item.original_url %}{{ item.original_url }}{% elif item.file_name %}{{ item.file_name }}{% endif %}">
+        <td class="py-2 px-4 border max-w-[16rem] truncate" title="{% if item.original_url %}{{ item.original_url }}{% elif item.file_name %}{{ item.file_name }}{% endif %}">
           {% if item.original_url %}{{ item.original_url }}
           {% elif item.file_name %}{{ item.file_name }}
           {% endif %}
@@ -27,10 +28,10 @@
                   <a href="/{{ item.short_code }}?view" class="text-sm text-gray-500 hover:underline preview-link" data-ext="{{ ext }}">
                     預覽
                   </a>
-                  <button onclick="copyToClipboard('{{ request.url.scheme }}://{{ request.url.hostname }}/{{ item.short_code }}')" class="text-sm text-blue-500 hover:underline">
-                    複製
-                  </button>
                 {% endif %}
+                <button onclick="copyToClipboard('{{ request.url.scheme }}://{{ request.url.hostname }}/{{ item.short_code }}')" class="text-sm text-blue-500 hover:underline">
+                  複製
+                </button>
               </div>
         </td>
         <td class="text-center py-2 px-4 border">{{ item.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
@@ -45,3 +46,4 @@
       {% endfor %}
     </tbody>
   </table>
+</div>

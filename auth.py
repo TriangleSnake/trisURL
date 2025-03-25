@@ -1,15 +1,15 @@
 from authlib.integrations.starlette_client import OAuth
-from starlette.config import Config
+from config import CONFIG
 
-config = Config(".env")
+
 
 oauth = OAuth()
 
 oauth.register(
     name="synology",
-    server_metadata_url = config("OIDC_SERVER_METADATA_URL"),
-    client_id = config("OIDC_CLIENT_ID"),
-    client_secret = config("OIDC_CLIENT_SECRET"),
+    server_metadata_url = CONFIG("OIDC_SERVER_METADATA_URL"),
+    client_id = CONFIG("OIDC_CLIENT_ID"),
+    client_secret = CONFIG("OIDC_CLIENT_SECRET"),
     client_kwargs = {
         "scope": "openid email profile"
     }

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from auth import oauth
-from auth import config
+from config import CONFIG
 router = APIRouter()
 
 @router.get("/login")
 async def login(request: Request):
-    redirect_url = config("REDIRECT_URL")
+    redirect_url = CONFIG("REDIRECT_URL")
     return await oauth.synology.authorize_redirect(request, redirect_url)
 
 @router.get("/relay", name="auth_callback")
