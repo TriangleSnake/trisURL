@@ -20,7 +20,7 @@
         <td class="py-2 px-4 border">
             <div class="flex items-center gap-2">
                 <a href="/{{ item.short_code }}" target="_blank" class="text-indigo-600 hover:underline">
-                  tris.tw/{{ item.short_code }}
+                  {{domain}}/{{ item.short_code }}
                 </a>
                 {% if item.file_path %}
                   {% set ext = item.file_name.split('.')[-1].lower() %}

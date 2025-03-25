@@ -15,7 +15,7 @@ from urllib.parse import quote
 from routes_auth import router as auth_router
 from auth_utils import get_current_user
 import secrets
-
+from config import CONFIG
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=secrets.token_urlsafe(32))
@@ -95,6 +95,8 @@ def dashboard(
         ).one()
 
     return templates.TemplateResponse("index.html", {
+        "site_name": CONFIG("SITE_NAME"),
+        "domain": CONFIG("DOMAIN"),
         "request": request,
         "active_urls": active_urls,
         "expired_urls": expired_urls,
