@@ -17,7 +17,7 @@ async def auth_callback(request: Request):
 
     if not user:
         raise HTTPException(status_code=400, detail="無法取得使用者資訊")
-    request.session["expire"] = datetime.datetime.now() + datetime.timedelta(days=1)
+    request.session["expire"] = (datetime.datetime.now() + datetime.timedelta(days=1)).isoformat()
     request.session["user"] = user
 
     return RedirectResponse("/")

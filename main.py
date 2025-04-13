@@ -131,8 +131,6 @@ async def shorten(
     file: UploadFile = File(None),
     expires_in_days: int = Form(30)
 ):
-    if not check_valid_session(request):
-        return RedirectResponse("/login", status_code=303)
     
     user = get_current_user(request)
 
@@ -201,8 +199,7 @@ def handle_short_code(short_code: str, request: Request):
 
 @app.post("/delete/{url_id}")
 def delete_url(url_id: int, request: Request):
-    if not check_valid_session(request):
-        return RedirectResponse("/login", status_code=303)
+    
     user = get_current_user(request)
     with Session(engine) as session:
         url = session.get(URL, url_id)
@@ -215,8 +212,7 @@ def delete_url(url_id: int, request: Request):
 
 @app.post("/delete_expired")
 def delete_expired(request: Request):
-    if not check_valid_session(request):
-        return RedirectResponse("/login", status_code=303)
+    
     user = get_current_user(request)
     with Session(engine) as session:
         expired = session.exec(select(URL).where(URL.is_expired == True)).all()
