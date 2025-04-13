@@ -55,6 +55,14 @@ def cleanup_expired_entries():
 def on_startup():
     cleanup_expired_entries()
 
+@app.middleware("http")
+async def check_valid_session(request: Request, call_next):
+    if "user" in request.session and request.session["expire"] < datetime.now():
+        response = await call_next(request)
+        return response
+    else:
+        return RedirectResponse("/login")
+
 @app.get("/")
 def dashboard(
     request: Request,
