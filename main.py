@@ -25,6 +25,14 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 init_db()
 
+def check_valid_session(request: Request):
+    if "user" not in request.session or "expire" not in request.session:
+        return False
+    expire_time = datetime.fromisoformat(request.session["expire"])
+    if expire_time < datetime.now():
+        return False
+    return True
+
 def filename_sanitize(filename: str) -> str:
     blacklist = ["..", "/", "\\","\n","\r"]
     for item in blacklist:
@@ -55,14 +63,6 @@ def cleanup_expired_entries():
 def on_startup():
     cleanup_expired_entries()
 
-@app.middleware("http")
-async def check_valid_session(request: Request, call_next):
-    if "user" in request.session and request.session["expire"] < datetime.now():
-        response = await call_next(request)
-        return response
-    else:
-        return RedirectResponse("/login")
-
 @app.get("/")
 def dashboard(
     request: Request,
@@ -76,8 +76,10 @@ def dashboard(
             "username": "dev",
             "email": "dev@tris.tw"
         }
-    if "user" not in request.session:
-        return RedirectResponse("/login")
+        request.session["expire"] = (datetime.now() + timedelta(hours=1)).isoformat()
+    
+    if check_valid_session(request):
+        return RedirectResponse("/login", status_code=303)
 
     user = request.session["user"]
     offset_active = (page_active - 1) * page_size
@@ -129,6 +131,9 @@ async def shorten(
     file: UploadFile = File(None),
     expires_in_days: int = Form(30)
 ):
+    if check_valid_session(request):
+        return RedirectResponse("/login", status_code=303)
+    
     user = get_current_user(request)
 
     short_code = secrets.token_urlsafe(4)
@@ -196,6 +201,8 @@ def handle_short_code(short_code: str, request: Request):
 
 @app.post("/delete/{url_id}")
 def delete_url(url_id: int, request: Request):
+    if check_valid_session(request):
+        return RedirectResponse("/login", status_code=303)
     user = get_current_user(request)
     with Session(engine) as session:
         url = session.get(URL, url_id)
@@ -208,6 +215,8 @@ def delete_url(url_id: int, request: Request):
 
 @app.post("/delete_expired")
 def delete_expired(request: Request):
+    if check_valid_session(request):
+        return RedirectResponse("/login", status_code=303)
     user = get_current_user(request)
     with Session(engine) as session:
         expired = session.exec(select(URL).where(URL.is_expired == True)).all()
