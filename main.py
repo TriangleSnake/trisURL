@@ -2,7 +2,7 @@ import os
 import secrets
 import shutil
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Request, Form, UploadFile, File, Depends
+from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import RedirectResponse, FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -16,10 +16,14 @@ from routes_auth import router as auth_router
 from auth_utils import get_current_user
 import secrets
 from config import CONFIG
+from fastapi.staticfiles import StaticFiles
+
 
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=secrets.token_urlsafe(32))
 app.include_router(auth_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -59,10 +63,6 @@ def cleanup_expired_entries():
         if expired_urls:
             print(f"✅ 清除完成，共標記 {len(expired_urls)} 筆為過期")
 
-@app.on_event("startup")
-def on_startup():
-    cleanup_expired_entries()
-
 @app.get("/")
 def dashboard(
     request: Request,
@@ -79,6 +79,7 @@ def dashboard(
         request.session["expire"] = (datetime.now() + timedelta(hours=1)).isoformat()
     
     if not check_valid_session(request):
+        cleanup_expired_entries()
         return RedirectResponse("/login", status_code=303)
 
     user = request.session["user"]
